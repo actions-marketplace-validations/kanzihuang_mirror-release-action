@@ -27,8 +27,8 @@ runs:
     - name: Download the release
       run: |
         patterns=(${{ inputs.patterns }})
+        echo ${{ github.token }} | gh auth login --with-token
         gh release download --dir "${{ inputs.dir }}" --repo "${{ inputs.repository }}" "${{ inputs.tag }}" ${patterns[@]/#/-p }
-        ls -l "${{ inputs.dir }}"
       shell: bash
 
     - name: Commit and Push

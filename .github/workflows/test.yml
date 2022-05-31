@@ -8,44 +8,46 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      BRANCH: containerd/nerdctl@v0.20.0
+      DIRECTORY: containerd/nerdctl/v0.20.0
+      REPOSITORY: containerd/nerdctl
+      TAG: v0.20.0
+      PATTERNS: nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz
+      FILE_COUNT: 5
     steps:
     - uses: actions/checkout@v3
 
-    - name: Delete the branch named containerd/nerdctl@v0.20.0
+    - name: Delete the branch named ${{ env.BRANCH }} 
       run: |
-        if [[ "$(git ls-remote refs/heads/containerd/nerdctl@v0.20.0)" ]]; then
-          git push --delete origin containerd/nerdctl@v0.20.0
+        if [[ "$(git ls-remote origin refs/heads/${{ env.BRANCH }})" ]]; then
+          git push --delete origin ${{ env.BRANCH }}
         fi
       shell: bash
 
     - name: Mirror the release of nerdctl
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       uses: ./
       with:
-        repository: "containerd/nerdctl"
-        tag: "v0.20.0"
-        patterns: "nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz"
-    - name: Varify all files exist
-      run: |
-        git switch containerd/nerdctl/@v0.20.0
-        files=($(cd containerd/nerdctl/v0.20.0" && ls nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz))
-        [[ ${#files[@]} != 5 ]] && exit 1
-        git switch main
+        repository: ${{ env.REPOSITORY }}
+        tag: ${{ env.TAG }}
+        patterns: ${{ env.PATTERNS }}
+    - name: Verify that all files downloaded
+      run: __test__/verify-downloaded-files.sh "${{ env.BRANCH }}" "${{ env.DIRECTORY }}" "${{ env.PATTERNS }}" "${{ env.FILE_COUNT }}"
       shell: bash
 
-    - name: Not mirror the release mirrorred
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Do not mirror the release if mirrored
       uses: ./
       with:
-        repository: "containerd/nerdctl"
-        tag: "v0.20.0"
-        patterns: "SHA256SUMS*"
-    - name: Varify all files exist
+        repository: ${{ env.REPOSITORY }}
+        tag: ${{ env.TAG }}
+        patterns: SHA256SUMS*
+    - name: Verify that all downloaded files is still there
+      run: __test__/verify-downloaded-files.sh "${{ env.BRANCH }}" "${{ env.DIRECTORY }}" "${{ env.PATTERNS }}" "${{ env.FILE_COUNT }}"
+      shell: bash
+
+    - name: Delete the branch named ${{ env.BRANCH }}
       run: |
-        git switch containerd/nerdctl/@v0.20.0
-        files=($(cd containerd/nerdctl/v0.20.0" && ls nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz))
-        [[ ${#files[@]} != 5 ]] && exit 1
-        git switch main
-      shell: bash      
+        if [[ "$(git ls-remote origin refs/heads/${{ env.BRANCH }})" ]]; then
+          git push --delete origin ${{ env.BRANCH }}
+        fi
+      shell: bash
