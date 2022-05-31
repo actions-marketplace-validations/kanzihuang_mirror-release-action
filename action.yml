@@ -1,0 +1,37 @@
+name: 'Mirror the release'
+
+inputs:
+  repository:
+    description: "The source repository path. Expected format {owner}/{repo}"
+    required: true
+  tag:
+    description: "The github tag to download the release from"
+    required: true
+  patterns:
+    description: "Download only assets that match a glob patterns"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout the branch of the release
+      id: check_release
+      run: |
+        branch="${{ inputs.repository }}@${{ inputs.tag }}"
+        if [[ -z "$(git ls-remote origin refs/heads/$branch)" ]]; then
+          downloaded=no
+        else
+          downloaded=yes
+        fi
+        echo "::set-output name=downloaded::$downloaded"
+      shell: bash
+
+    - name: Download the release to a branch and push the branch
+      if: ${{ steps.check_release.outputs.downloaded == 'no' }}
+      uses: ./download-and-push
+      with:
+        branch: ${{ inputs.repository }}@${{ inputs.tag }}
+        dir: ${{ inputs.repository }}/${{ inputs.tag }}
+        repository: ${{ inputs.repository }}
+        tag: ${{ inputs.tag }}
+        patterns: ${{ inputs.patterns }}

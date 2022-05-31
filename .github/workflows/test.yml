@@ -1,0 +1,51 @@
+name: Test to mirror releases
+on: 
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Delete the branch named containerd/nerdctl@v0.20.0
+      run: |
+        if [[ "$(git ls-remote refs/heads/containerd/nerdctl@v0.20.0)" ]]; then
+          git push --delete origin containerd/nerdctl@v0.20.0
+        fi
+      shell: bash
+
+    - name: Mirror the release of nerdctl
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ./
+      with:
+        repository: "containerd/nerdctl"
+        tag: "v0.20.0"
+        patterns: "nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz"
+    - name: Varify all files exist
+      run: |
+        git switch containerd/nerdctl/@v0.20.0
+        files=($(cd containerd/nerdctl/v0.20.0" && ls nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz))
+        [[ ${#files[@]} != 5 ]] && exit 1
+        git switch main
+      shell: bash
+
+    - name: Not mirror the release mirrorred
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ./
+      with:
+        repository: "containerd/nerdctl"
+        tag: "v0.20.0"
+        patterns: "SHA256SUMS*"
+    - name: Varify all files exist
+      run: |
+        git switch containerd/nerdctl/@v0.20.0
+        files=($(cd containerd/nerdctl/v0.20.0" && ls nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz))
+        [[ ${#files[@]} != 5 ]] && exit 1
+        git switch main
+      shell: bash      
