@@ -44,7 +44,8 @@ The branches mirroring the releases:
 
 Cloning the branch with no references other than single cloned branch:
 ```sh
-git clone --branch <name> --depth 1 --no-tags --single-branch <repository> [<directory>]
+git clone --branch containerd/nerdctl@v0.20.0 --depth 1 --no-tags --single-branch <repository> [<directory>]
+cat containerd/nerdctl/v0.20.0.tar.gz.* | tar xzvf - --directory containerd/nerdctl
 ```
 
 # License
