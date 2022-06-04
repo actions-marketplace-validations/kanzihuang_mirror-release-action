@@ -1,5 +1,9 @@
-name: 'Mirror the release'
+name: Mirror the release of another repository to your repository
 description: This action download the release of any public repository, commit it to a branch, and push the branch to your repository.
+author: Wanli
+branding:
+  icon: upload-cloud
+  color: green
 
 inputs:
   repository:
