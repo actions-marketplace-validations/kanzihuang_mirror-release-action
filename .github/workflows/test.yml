@@ -9,8 +9,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      BRANCH: containerd/nerdctl@v0.20.0
-      DIRECTORY: containerd/nerdctl/v0.20.0
+      BRANCH: containerd/nerdctl
+      DIRECTORY: v0.20.0
       REPOSITORY: containerd/nerdctl
       TAG: v0.20.0
       PATTERNS: nerdctl-0.20.0-linux-amd64.tar.gz SHA256SUMS* nerdctl-0.20.0-linux-arm*.tar.gz
